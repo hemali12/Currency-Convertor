@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link rel="stylesheet" type="text/css" href="stylesheets/main.css">
+</head>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+
+<script>
+var myApp = angular.module('myApp',[]);
+		myApp.service('dataService', function($http) {
+			this.getData = function(callbackFunc) {
+			$http.get("https://api.fixer.io/latest?base=CAD",{jsonpCallbackParam: 'callback'})
+				.then(function(data) {
+					callbackFunc(data.data.rates['USD']);
+	  		});
+	     }
+     
+		});
+
+		myApp.controller('myCtrl', function($scope, dataService,$http) {
+		$scope.Country = ["USD", "CAD", "EUR"]; //option values
+	    $scope.data = null;
+	    $scope.baseOption="CAD";			//Default value
+	    $scope.val=document.getElementById('inputVal').value;
+	    $scope.CurrencyOption='USD';   
+    	
+	    //default function called for retrived data
+    	dataService.getData(function(dataResponse) {
+    
+       //function to convert instered Input value
+	    $scope.MyFuncs=function(val){
+	        	$scope.data =val * dataResponse;
+	    };
+
+	    //function called when user changes the currency option
+	    $scope.ChangedFunc=function(value){  
+	    	if(value == "EUR")
+	    	{
+	    		var url="https://api.fixer.io/latest?base=EUR";
+	    		if($scope.CurrencyOption == "EUR"){			//if the convert into currency and base currency is same then it changed the value
+	    			$scope.CurrencyOption='CAD';
+	    		}
+	    	}else if(value == "CAD")
+	    	{
+	    		var url="https://api.fixer.io/latest?base=CAD";
+	    		if($scope.CurrencyOption == "CAD"){
+	    				$scope.CurrencyOption='USD';
+	    		}
+	    	}else {
+	    		var url="https://api.fixer.io/latest?base=USD";
+	    		if($scope.CurrencyOption == "USD"){
+	    			$scope.CurrencyOption='CAD';
+	    		}
+	    	}
+	    	
+	    	$http.get(url,{jsonpCallbackParam: 'callback'})
+	  				.then(function(data) {
+	  					var vals=document.getElementById('inputVal').value;
+	  					$scope.data =data.data.rates[$scope.CurrencyOption] * vals;
+	  				// function called each time input value changed	
+	  				 $scope.MyFuncs=function(val){
+	        				$scope.data =data.data.rates[$scope.CurrencyOption]*val;
+	    			};
+
+	    			//function called each time when convert currency value changed
+	      			$scope.ChangedFuncs=function(value){
+	      				var vals=document.getElementById('inputVal').value;
+	      				$scope.data =data.data.rates[value]*vals;		
+	      			};
+	  		});
+    	};
+    });
+});
+	function ShowDetail(){
+		document.getElementById('Detail').setAttribute("style",'display:block');
+	}
+</script>
+
+<body ng-app="myApp">
+<div ng-controller="myCtrl" class="main">
+  <h1>Currency Convert</h1>
+  	<div>
+  		<p>Type in amount and select currency: </p>
+  		<div>
+	  		<input type="number" ng-model="val" ng-change="MyFuncs(val)" id="inputVal" placeholder="0.00" />
+	  		<select ng-change="ChangedFunc(baseOption)" ng-model="baseOption" ng-options="x for x in Country"></select>
+	  	</div>
+	  	<p>
+	  		Convert in amount:
+	  	</p>
+	  	<div>
+	  		<input type="number" ng-disabled="true" ng-model="data" placeholder="0.00">
+			<select id="convertInto" ng-change="ChangedFuncs(CurrencyOption)" ng-model="CurrencyOption" ng-options="x for x in Country"></select>
+	  	</div>
+	</div>
+	<div class="Detail">
+		<a href="#Detail" onclick="ShowDetail()">Disclaimer</a>
+		<div id="Detail">
+			<p>
+					Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum
+			</p>
+		</div>
+</div>
+
+</div>
+
+</body>
+</html>
